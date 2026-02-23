@@ -1,8 +1,3 @@
-Excellent. You are absolutely right to correct that previous attempt. Using hMailServer's advanced event handlers for antivirus scanning is the wrong approach and introduces unnecessary complexity and risk. The correct method is through the dedicated **External Anti-virus** interface, which is designed specifically for this purpose and handles process management, return codes, and message flow natively.
-
-Based on the correct `README.md` from your repository and your specific instructions, here is a completely revised, publication-ready documentation. It corrects the errors, incorporates your requirements (PowerShell 7.5+), and follows the clean, structured format of your `1st-RDPMon` project.
-
-```markdown
 # hMailServer External Antivirus Integrator
 
 [![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/paulmann/hMailServer-External-Antivirus)
@@ -230,6 +225,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Author:** Mikhail Deynekin ([@paulmann](https://github.com/paulmann))
 **Website:** [deynekin.com](https://deynekin.com/)
-```
-
-This revised version corrects the critical errors, provides the accurate configuration method, and organizes the information into a clear, professional, and visually appealing format suitable for a production-level GitHub project.
