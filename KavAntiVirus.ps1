@@ -9,8 +9,7 @@
     codes so that hMailServer can take action on infected or suspicious messages.
 
     Supports Kaspersky Antivirus, Kaspersky Internet Security, and
-    Kaspersky Endpoint Security for Windows.
-
+Update exit codes: Infected = 2, Error = 1
 .PARAMETER FilePath
     The full path to the file or directory to be scanned. This parameter is
     automatically passed by hMailServer when invoking the external scanner.
