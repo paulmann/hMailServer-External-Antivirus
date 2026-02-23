@@ -61,7 +61,7 @@ Ensure the following prerequisites are met before deployment:
 | :--- | :--- | :--- |
 | **OS** | Windows Server 2012 R2 or newer | Compatible with hMailServer and AV tools. |
 | **hMailServer** | Version 5.6 or newer | Requires stable Event Handler API. |
-| **PowerShell** | Version 5.1 or newer | Required for script execution. |
+| **PowerShell** | Version 7.5 or newer | Required for script execution. |
 | **Antivirus** | Kaspersky Security **OR** Windows Defender | Must be installed, licensed, and updated. |
 | **Permissions** | Local Administrator | hMailServer service account needs execute rights on scripts and AV binaries. |
 
