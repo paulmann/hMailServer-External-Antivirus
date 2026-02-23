@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![PowerShell](https://img.shields.io/badge/powershell-7.5%2B-blue.svg)](https://docs.microsoft.com/en-us/powershell/)
 [![Platform](https://img.shields.io/badge/platform-Windows%20Server%202012%2B-blue.svg)](https://www.microsoft.com/windows/)
-[![Platform](https://img.shields.io/badge/platform-Windows%20112B-blue.svg)](https://www.microsoft.com/windows/)
+[![Platform](https://img.shields.io/badge/platform-Windows%2011-blue.svg)](https://www.microsoft.com/windows/)
 [![hMailServer](https://img.shields.io/badge/hMailServer-5.6%2B-orange.svg)](https://www.hmailserver.com/)
 
 Robust PowerShell-based antivirus integration scripts for hMailServer, supporting **Kaspersky Security** and **Windows Defender**. Designed to secure email delivery pipelines through external event-driven scanning without compromising server performance.
