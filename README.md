@@ -177,7 +177,7 @@ graph TD
     RunScan --> CaptureCode[Capture Exit Code & Output];
     CaptureCode --> CodeCheck{Exit Code == 2?};
     CodeCheck -- Yes --> Exit2[Exit with Code 2: INFECTED];
-    CodeCheck -- No --> OutputCheck{Output contains<br>"Threat detected"?};
+    CodeCheck -- No --> OutputCheck{Output contains 'Threat detected'?};
     OutputCheck -- Yes --> Exit2;
     OutputCheck -- No --> Exit0;
     
