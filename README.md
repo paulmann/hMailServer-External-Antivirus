@@ -1,7 +1,7 @@
 # hMailServer External Antivirus Integration
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-blue.svg)](https://microsoft.com/powershell)
+[![PowerShell](https://img.shields.io/badge/PowerShell-7.5%2B-blue.svg)](https://microsoft.com/powershell)
 [![hMailServer](https://img.shields.io/badge/hMailServer-5.x-orange.svg)](https://www.hmailserver.com/)
 
 A professional collection of PowerShell-based integration scripts for **hMailServer**, enabling seamless antivirus protection via **Microsoft Defender** and **Kaspersky Antivirus**.
