@@ -1,205 +1,142 @@
 # hMailServer External Antivirus Integration
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/paulmann/hMailServer-External-Antivirus)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![PowerShell](https://img.shields.io/badge/powershell-7.5%2B-blue.svg)](https://docs.microsoft.com/en-us/powershell/)
-[![Platform](https://img.shields.io/badge/platform-Windows%20Server%202012%2B-blue.svg)](https://www.microsoft.com/windows/)
-[![Platform](https://img.shields.io/badge/platform-Windows%2011-blue.svg)](https://www.microsoft.com/windows/)
-[![hMailServer](https://img.shields.io/badge/hMailServer-5.6%2B-orange.svg)](https://www.hmailserver.com/)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/paulmann/hMailServer-External-Antivirus)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![PowerShell](https://img.shields.io/badge/PowerShell-7.x%20%2F%205.1-blue.svg)](https://docs.microsoft.com/en-us/powershell/)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20Server%202022%2B-blue.svg)](https://www.microsoft.com/windows/)
+[![hMailServer](https://img.shields.io/badge/hMailServer-5.x-orange.svg)](https://www.hmailserver.com/)
 
-Robust PowerShell-based antivirus integration scripts for hMailServer, supporting **Kaspersky Security** and **Windows Defender**. Designed to secure email delivery pipelines through external event-driven scanning without compromising server performance.
+Robust PowerShell-based antivirus integration scripts for **hMailServer**, supporting **Kaspersky Security** and **Windows Defender**. Designed to secure email delivery pipelines through high-performance external scanning without compromising server stability.
 
 ---
 
-## 📑 Table of Contents
+## 📖 Table of Contents
 
-1. [Problem Statement & Architecture](#1-problem-statement--architecture)
+1. [Architectural Philosophy & Security Imperatives](#1-architectural-philosophy--security-imperatives)
 2. [Key Features](#2-key-features)
 3. [System Requirements](#3-system-requirements)
 4. [Installation Guide](#4-installation-guide)
-5. [Configuration](#5-configuration)
-6. [Workflow Architecture](#6-workflow-architecture)
-   - [Kaspersky Integration](#kaspersky-integration-workflow)
-   - [Windows Defender Integration](#windows-defender-integration-workflow)
-7. [Troubleshooting & Best Practices](#7-troubleshooting--best-practices)
-8. [License](#8-license)
+5. [hMailServer Configuration](#5-hmailserver-configuration)
+6. [Antivirus Engine Workflows](#6-antivirus-engine-workflows)
+    - [Kaspersky Integration](#kaspersky-integration)
+    - [Windows Defender Integration](#windows-defender-integration)
+7. [🛡️ Critical: Antivirus Exclusions](#7-critical-antivirus-exclusions)
+8. [Troubleshooting & Best Practices](#8-troubleshooting--best-practices)
+9. [License](#9-license)
 
 ---
 
-## 1. Problem Statement & Architecture
+## 1. Architectural Philosophy & Security Imperatives
 
 ### The Architectural Gap
-hMailServer is engineered around principles of minimalism and efficiency. While this ensures a low resource footprint, it inherently excludes built-in antivirus engines. This is not an oversight but a foundational architectural choice to avoid licensing complexities and performance bottlenecks associated with bundling proprietary security software. However, in modern threat landscapes, email remains a primary vector for malware, ransomware, and phishing payloads.
+hMailServer is engineered around principles of minimalism and efficiency. While this ensures a low resource footprint, it inherently excludes built-in antivirus engines. This is a foundational architectural choice to avoid licensing complexities and performance bottlenecks associated with bundling proprietary security software.
 
 ### Why External Integration is Critical
 Deploying this solution addresses three critical architectural constraints:
 
-1.  **Licensing & Compliance:** Antivirus engines (Kaspersky, Microsoft, etc.) are protected by intellectual property rights. Integrating them directly into hMailServer would violate licensing terms. This solution delegates scanning to legally licensed external tools installed on the host OS.
-2.  **Performance Isolation:** Modern antivirus scanning involves heuristic analysis and deep content inspection, which are computationally intensive. Running these synchronously within the main hMailServer process would cause latency spikes. These scripts execute scans in separate processes, ensuring the mail server remains responsive even during heavy scanning loads.
-3.  **Modular Security:** This approach allows administrators to choose best-of-breed security tools without being locked into a specific vendor. It transforms the antivirus into a pluggable security module, aligning with modern microservices architecture principles.
-
-> **Note:** Without proactive scanning at the point of delivery, an hMailServer installation becomes a vulnerable entry point. This project bridges that gap securely.
+1.  **Licensing & Compliance:** Antivirus engines (Kaspersky, Microsoft, etc.) are protected by intellectual property rights. This solution delegates scanning to legally licensed external tools installed on the host OS.
+2.  **Performance Isolation:** Modern antivirus scanning involves heuristic analysis and deep content inspection, which are computationally intensive. These scripts execute scans in separate processes, ensuring the mail server remains responsive even during heavy scanning loads.
+3.  **Modular Security:** This approach allows administrators to choose best-of-breed security tools without being locked into a specific vendor, aligning with modern microservices architecture principles.
 
 ---
 
 ## 2. Key Features
 
 *   **Dual-Engine Support:** Pre-configured scripts for **Kaspersky Security** (`KavAntiVirus.ps1`) and **Windows Defender** (`WinDefAntiVirus.ps1`).
-*   **Event-Driven Execution:** Utilizes the hMailServer `On Deliver Message` event handler for real-time scanning before inbox delivery.
-*   **Secure Temp Handling:** Creates isolated temporary copies of message bodies for scanning, preventing file locks on active mail store files.
-*   **Exit Code Orchestration:** Interprets antivirus exit codes to automatically allow clean messages or terminate delivery of infected ones.
-*   **Timeout Protection:** Built-in process timeout mechanisms prevent hung scanners from blocking the mail server queue.
-*   **Error Containment:** Script errors are logged and handled locally, ensuring stability of the core hMailServer service.
+*   **Engine Auto-Detection:** Scripts automatically locate antivirus binaries via standard installation paths and registry keys.
+*   **Parameterized Workflow:** Seamlessly handles file paths passed directly from hMailServer's external scanner interface.
+*   **Fail-Safe Error Handling:** Structured logic to catch timeouts, access denials, and engine failures, preventing mail delivery deadlocks.
+*   **Comprehensive Logging:** Detailed execution logs for auditing and rapid troubleshooting.
 
 ---
 
 ## 3. System Requirements
 
-Ensure the following prerequisites are met before deployment:
-
-| Component | Requirement | Notes |
-| :--- | :--- | :--- |
-| **OS** | Windows Server 2012 R2 or newer | Compatible with hMailServer and AV tools. |
-| **hMailServer** | Version 5.6 or newer | Requires stable Event Handler API. |
-| **PowerShell** | Version 7.5 or newer | Required for script execution. |
-| **Antivirus** | Kaspersky Security **OR** Windows Defender | Must be installed, licensed, and updated. |
-| **Permissions** | Local Administrator | hMailServer service account needs execute rights on scripts and AV binaries. |
+| Component | Requirement |
+| :--- | :--- |
+| **Operating System** | Windows Server 2016/2019/2022 or Windows 10/11 |
+| **hMailServer** | Version 5.x or newer |
+| **PowerShell** | PowerShell Core 7.x (Recommended) or Windows PowerShell 5.1 |
+| **Antivirus** | Kaspersky Endpoint Security / Internet Security OR Windows Defender |
+| **Permissions** | hMailServer Service Account must have Read/Execute rights on scripts and AV binaries |
 
 ---
 
 ## 4. Installation Guide
 
-### Step 1: Deploy Scripts
-1.  Create a dedicated directory for scripts, e.g., `C:\Program Files (x86)\hMailServer\Scripts\Antivirus`.
-2.  Download the relevant script(s) from this repository:
-    *   [KavAntiVirus.ps1](https://raw.githubusercontent.com/paulmann/hMailServer-External-Antivirus/refs/heads/main/KavAntiVirus.ps1)
-    *   [WinDefAntiVirus.ps1](https://raw.githubusercontent.com/paulmann/hMailServer-External-Antivirus/refs/heads/main/WinDefAntiVirus.ps1)
-3.  Place the files into the created directory.
+### 4.1 Script Deployment
+1.  Clone this repository or download the `.ps1` files.
+2.  Create a dedicated directory for security scripts (e.g., `C:\Program Files (x86)\hMailServer\Scripts\`).
+3.  Copy `KavAntiVirus.ps1` or `WinDefAntiVirus.ps1` to this folder.
 
-### Step 2: Configure Permissions
-The account running the hMailServer service must have:
-*   **Read & Execute** permissions on the `.ps1` scripts.
-*   **Execute** permissions on `powershell.exe`.
-*   **Execute** permissions on the antivirus CLI tools (`kln.exe` or `MpCmdRun.exe`).
+### 4.2 Logging Preparation
+1.  Ensure the directory `C:\hMailServer\Logs\` exists.
+2.  Grant the hMailServer service account **Write** access to this folder.
 
 ---
 
-## 5. Configuration
+## 5. hMailServer Configuration
 
-Configure hMailServer to trigger the scripts via **Event Handlers**.
+To integrate the script, follow these steps in the hMailServer Administrator:
 
-1.  Open **hMailServer Administrator**.
-2.  Navigate to **Settings → Advanced → Event Handlers**.
-3.  Click **Add** and select event: `On Deliver Message`.
-4.  Configure the handler based on your antivirus solution:
+1.  Navigate to **Settings** > **Anti-virus**.
+2.  Select the **External anti-virus** tab.
+3.  Enable **Use external anti-virus**.
+4.  Configure the settings as follows:
 
-### For Kaspersky Security
-*   **Application Path:** `C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe`
-*   **Parameters:**
-    ```powershell
-    -ExecutionPolicy Bypass -File "C:\Program Files (x86)\hMailServer\Scripts\Antivirus\KavAntiVirus.ps1" -MessagePath $messagepath
-    ```
+### Scanner Configuration (Example for PowerShell 7)
+*   **Scanner executable:** `"C:\Program Files\PowerShell\7\pwsh.exe"`
+*   **Command line:** `-NoProfile -NonInteractive -File "C:\Program Files (x86)\hMailServer\Scripts\KavAntiVirus.ps1" "%FILE%"`
+*   **Return code for infected:** `2`
 
-### For Windows Defender
-*   **Application Path:** `C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe`
-*   **Parameters:**
-    ```powershell
-    -ExecutionPolicy Bypass -File "C:\Program Files (x86)\hMailServer\Scripts\Antivirus\WinDefAntiVirus.ps1" -MessagePath $messagepath
-    ```
-
-5.  **Save** the configuration and restart the hMailServer service.
+> [!IMPORTANT]
+> Ensure the path to `pwsh.exe` and the script matches your actual installation directory. Use `-ExecutionPolicy Bypass` if your system policy restricts script execution.
 
 ---
 
-## 6. Workflow Architecture
+## 6. Antivirus Engine Workflows
 
-The following diagrams illustrate the complete logic flow, including error handling, timeout management, and decision branches.
+### Kaspersky Integration
+The `KavAntiVirus.ps1` script utilizes the `avp.com` command-line utility.
+1.  **Trigger:** hMailServer passes the temporary message file path.
+2.  **Scan:** The script invokes `avp.com` with the `SCAN` command.
+3.  **Analysis:** Interprets Kaspersky's exit codes (0 = Clean, 1/2 = Infected).
+4.  **Feedback:** Returns `2` to hMailServer if a threat is detected.
 
-### Kaspersky Integration Workflow
-
-```mermaid
-flowchart TD
-    A[Event Triggered by hMailServer<br>On Deliver Message] --> B{Is Parameter Valid?}
-    B -- No --> M[Log Error: Invalid Message Path<br>Exit Failure]
-    B -- Yes --> C[Create Temp File]
-    C --> D{Can Temp File be Created?}
-    D -- No --> N[Log Error: Failed to Create Temp File<br>Exit Failure]
-    D -- Yes --> E[Save Message Body to Temp File]
-    E --> F{Can Message Body be Saved?}
-    F -- No --> O[Log Error: Failed to Write<br>Delete Temp File<br>Exit Failure]
-    F -- Yes --> G[Invoke kln.exe /scan TempFilePath]
-    G --> H[Wait for Scan Complete]
-    H --> I{Scan Process Timed Out?}
-    I -- Yes --> P[Log Error: Scan Timeout<br>Kill kln.exe Process<br>Delete Temp File<br>Exit Failure]
-    I -- No --> J[Get Exit Code from kln.exe]
-    J --> K{Is Exit Code 0?}
-    K -- Yes --> L[Log Success: Message Clean<br>Delete Temp File<br>Continue Delivery]
-    K -- No --> Q[Log Alert: Virus Found<br>Delete Temp File<br>Terminate Delivery<br>Exit Failure]
-    
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style M fill:#f96,stroke:#333,stroke-width:2px
-    style N fill:#f96,stroke:#333,stroke-width:2px
-    style O fill:#f96,stroke:#333,stroke-width:2px
-    style P fill:#f96,stroke:#333,stroke-width:2px
-    style Q fill:#f96,stroke:#333,stroke-width:2px
-    style L fill:#9f9,stroke:#333,stroke-width:2px
-```
-
-### Windows Defender Integration Workflow
-
-```mermaid
-flowchart TD
-    A[Event Triggered by hMailServer<br>On Deliver Message] --> B{Is Parameter Valid?}
-    B -- No --> M[Log Error: Invalid Message Path<br>Exit Failure]
-    B -- Yes --> C[Create Temp File]
-    C --> D{Can Temp File be Created?}
-    D -- No --> N[Log Error: Failed to Create Temp File<br>Exit Failure]
-    D -- Yes --> E[Save Message Body to Temp File]
-    E --> F{Can Message Body be Saved?}
-    F -- No --> O[Log Error: Failed to Write<br>Delete Temp File<br>Exit Failure]
-    F -- Yes --> G[Invoke MpCmdRun.exe -Scan TempFilePath]
-    G --> H[Wait for Scan Complete]
-    H --> I{Scan Process Timed Out?}
-    I -- Yes --> P[Log Error: Scan Timeout<br>Kill MpCmdRun.exe Process<br>Delete Temp File<br>Exit Failure]
-    I -- No --> J[Get Exit Code from MpCmdRun.exe]
-    J --> K{Is Exit Code 0?}
-    K -- Yes --> L[Log Success: Message Clean<br>Delete Temp File<br>Continue Delivery]
-    K -- No --> Q[Log Alert: Virus Found<br>Delete Temp File<br>Terminate Delivery<br>Exit Failure]
-    
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style M fill:#f96,stroke:#333,stroke-width:2px
-    style N fill:#f96,stroke:#333,stroke-width:2px
-    style O fill:#f96,stroke:#333,stroke-width:2px
-    style P fill:#f96,stroke:#333,stroke-width:2px
-    style Q fill:#f96,stroke:#333,stroke-width:2px
-    style L fill:#9f9,stroke:#333,stroke-width:2px
-```
+### Windows Defender Integration
+The `WinDefAntiVirus.ps1` script leverages the native `MpCmdRun.exe` utility.
+1.  **Trigger:** hMailServer passes the temporary message file path.
+2.  **Scan:** Invokes Defender with `-Scan -ScanType 3 -File`.
+3.  **Analysis:** Interprets Defender's exit codes (0 = Clean, 2 = Infected).
+4.  **Feedback:** Returns `2` to hMailServer if a threat is detected.
 
 ---
 
-## 7. Troubleshooting & Best Practices
+## 7. 🛡️ Critical: Antivirus Exclusions
 
-### Common Issues
+To prevent file locking conflicts and performance degradation, you **must** configure your Antivirus to exclude the following directories:
 
-| Problem | Symptom | Likely Cause | Solution |
-| :--- | :--- | :--- | :--- |
-| **Script Not Executing** | Messages delivered without scan. | Incorrect path in Event Handler. | Verify full path to `.ps1` in Parameters field. |
-| **Access Denied** | Errors in hMailServer logs. | Service account permissions. | Grant **Read & Execute** on scripts and AV tools. |
-| **Antivirus Idle** | Script runs, no AV activity. | AV service stopped or outdated. | Update signatures and ensure On-Access scanning is enabled. |
-| **High Server Load** | Latency during email traffic. | Aggressive scan settings. | Optimize AV scan profiles or increase script timeout. |
-| **False Positives** | Legitimate emails deleted. | Heuristic analysis sensitivity. | Add exclusion rules in AV console for specific file types. |
-
-### Best Practices
-1.  **Monitor Logs:** Regularly review hMailServer logs for script exit codes. Non-zero codes indicate blocked threats or errors.
-2.  **Update Routine:** Keep both hMailServer and Antivirus definitions updated to ensure compatibility and threat detection.
-3.  **Backup Configuration:** Maintain backups of Event Handler configurations before making changes.
-4.  **Security Audit:** Periodically audit the `Scripts` directory permissions to prevent unauthorized modification.
+*   `C:\Program Files (x86)\hMailServer\Data\` (Message Storage)
+*   `C:\Program Files (x86)\hMailServer\Temp\` (Scanning Buffer)
+*   `C:\hMailServer\Logs\` (Log Files)
 
 ---
 
-## 8. License
+## 8. Troubleshooting & Best Practices
+
+| Problem | Likely Cause | Solution |
+| :--- | :--- | :--- |
+| **Infected mail delivered** | Incorrect Return Code | Verify "Return code for infected" is set to `2`. |
+| **Access Denied** | Permissions | Ensure the service account has execute rights on `pwsh.exe`. |
+| **Scanning Hangs** | Timeout | Increase script timeout or optimize AV scan profile. |
+| **False Positives** | Heuristics | Adjust AV heuristic sensitivity or add specific exclusions. |
+
+---
+
+## 9. License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
-*Maintained with ❤️ by [paulmann](https://github.com/paulmann)*
+**Author:** Mikhail Deynekin ([@paulmann](https://github.com/paulmann))  
+**Website:** [deynekin.com](https://deynekin.com/)
