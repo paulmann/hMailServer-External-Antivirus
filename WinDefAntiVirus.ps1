@@ -18,20 +18,20 @@
 
 .OUTPUTS
     Exit Code 0 - File is clean, no threats detected
-    Exit Code 1 - Threat detected, file should be quarantined/rejected
-    Exit Code 2 - Scan error or engine failure
+    Exit Code 1 - Scan error or engine failure
+    Exit Code 2 - Threat detected, file should be quarantined/rejected
 
 .NOTES
     Author:      Mikhail Deynekin
     Repository:  https://github.com/paulmann/hMailServer-External-Antivirus
-    Version:     1.0.0
+    Version:     1.1.0
     Requires:    Windows Defender (Microsoft Defender Antivirus) must be active
-    Requires:    PowerShell 5.1 or higher
+    Requires:    PowerShell 5.1 or Core 7.x
     Requires:    hMailServer 5.x or higher with External Antivirus feature enabled
 
 .EXAMPLE
     # Called automatically by hMailServer:
-    powershell.exe -NonInteractive -File "C:\Scripts\WinDefAntiVirus.ps1" "C:\temp\hms_scan_file.tmp"
+    pwsh.exe -NoProfile -NonInteractive -File "C:\hMailServer\Scripts\WinDefAntiVirus.ps1" "C:	emp\hms_scan_file.tmp"
 
 .LINK
     https://github.com/paulmann/hMailServer-External-Antivirus
@@ -52,9 +52,6 @@ $MpCmdRunPath = "$env:ProgramFiles\Windows Defender\MpCmdRun.exe"
 # Log file path (set to $null to disable logging)
 $LogFile = "C:\hMailServer\Logs\WinDefAntiVirus.log"
 
-# Maximum wait time for scan completion (in seconds)
-$ScanTimeout = 120
-
 # ============================================================
 # Functions
 # ============================================================
@@ -73,35 +70,14 @@ function Write-Log {
 }
 
 function Test-WindowsDefender {
-    <#
-    .SYNOPSIS
-        Verifies that Windows Defender is available and the engine is up to date.
-    #>
     if (-not (Test-Path $MpCmdRunPath)) {
         Write-Log "Windows Defender MpCmdRun.exe not found at: $MpCmdRunPath" -Level "ERROR"
         return $false
     }
-    try {
-        $Status = Get-MpComputerStatus -ErrorAction Stop
-        if (-not $Status.AntivirusEnabled) {
-            Write-Log "Windows Defender antivirus is disabled on this system." -Level "WARN"
-        }
-        Write-Log "Defender engine version: $($Status.AMEngineVersion), Signature version: $($Status.AntivirusSignatureVersion)"
-        return $true
-    } catch {
-        Write-Log "Unable to query Windows Defender status: $_" -Level "WARN"
-        # Still proceed with scan attempt even if status query fails
-        return $true
-    }
+    return $true
 }
 
 function Invoke-DefenderScan {
-    <#
-    .SYNOPSIS
-        Runs a Windows Defender scan on the specified file path.
-    .OUTPUTS
-        Returns the process exit code from MpCmdRun.exe
-    #>
     param([string]$Path)
 
     Write-Log "Starting scan: $Path"
@@ -121,7 +97,7 @@ function Invoke-DefenderScan {
         return $ExitCode
     } catch {
         Write-Log "Failed to execute MpCmdRun.exe: $_" -Level "ERROR"
-        return 2
+        return 1
     }
 }
 
@@ -132,42 +108,32 @@ function Invoke-DefenderScan {
 Write-Log "=== hMailServer Windows Defender Scanner invoked ==="
 Write-Log "Target file: $FilePath"
 
-# Validate input
-if ([string]::IsNullOrWhiteSpace($FilePath)) {
-    Write-Log "No file path provided. Exiting with error." -Level "ERROR"
-    exit 2
+if ([string]::IsNullOrWhiteSpace($FilePath) -or -not (Test-Path -LiteralPath $FilePath)) {
+    Write-Log "Invalid file path: $FilePath" -Level "ERROR"
+    exit 1
 }
 
-if (-not (Test-Path -LiteralPath $FilePath)) {
-    Write-Log "Specified file/path does not exist: $FilePath" -Level "ERROR"
-    exit 2
-}
-
-# Verify Windows Defender is available
 if (-not (Test-WindowsDefender)) {
-    Write-Log "Windows Defender is unavailable. Failing safe (treating as infected)." -Level "ERROR"
-    exit 2
+    Write-Log "Windows Defender is unavailable." -Level "ERROR"
+    exit 1
 }
 
-# Perform the scan
 $ScanResult = Invoke-DefenderScan -Path $FilePath
 
-# Interpret result
 # MpCmdRun.exe exit codes:
 #   0 = No threats found
 #   2 = Threat found
-# Any other code = Error
 switch ($ScanResult) {
     0 {
-        Write-Log "Scan CLEAN: No threats detected in $FilePath"
+        Write-Log "Scan CLEAN: No threats detected."
         exit 0
     }
     2 {
-        Write-Log "Scan INFECTED: Threat detected in $FilePath" -Level "WARN"
-        exit 1
+        Write-Log "Scan INFECTED: Threat detected." -Level "WARN"
+        exit 2
     }
     default {
-        Write-Log "Scan ERROR: Unexpected exit code $ScanResult from Windows Defender" -Level "ERROR"
-        exit 2
+        Write-Log "Scan ERROR: Unexpected exit code $ScanResult" -Level "ERROR"
+        exit 1
     }
 }
