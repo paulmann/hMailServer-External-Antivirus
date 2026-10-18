@@ -220,7 +220,7 @@ To prevent recursive scanning, file locking conflicts, and severe performance de
 
 ## 9. License & Author
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the PolyForm Noncommercial License 1.0.0 - see the [LICENSE](LICENSE) file for details.
 
 **Author:** Mikhail Deynekin ([@paulmann](https://github.com/paulmann))
 **Website:** [deynekin.com](https://deynekin.com/)
