@@ -1,7 +1,6 @@
 # hMailServer External Antivirus Integrator
 
 [![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/paulmann/hMailServer-External-Antivirus)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![PowerShell](https://img.shields.io/badge/PowerShell-7.5%2B-blue.svg)](https://github.com/PowerShell/PowerShell)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20Server%202016%2B-blue.svg)](https://www.microsoft.com/windows/)
 [![hMailServer](https://img.shields.io/badge/hMailServer-5.x-orange.svg)](https://www.hmailserver.com/)
